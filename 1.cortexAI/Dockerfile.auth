@@ -7,10 +7,9 @@ COPY 1.cortexAI/backend/services/auth/package*.json ./
 RUN npm install
 
 COPY 1.cortexAI/backend/services/auth/ ./
-
 COPY 1.cortexAI/backend/shared/ /shared/
 
-RUN mkdir -p /shared/node_modules && cp -r /app/node_modules/ioredis /shared/node_modules/
+RUN rm -rf /shared/node_modules && ln -s /app/node_modules /shared/node_modules
 
 EXPOSE 8001
 
