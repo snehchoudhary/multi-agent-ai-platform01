@@ -1,19 +1,9 @@
-FROM node
-
+FROM node:22
 WORKDIR /app
-
-
-COPY package*.json ./
+COPY 1.cortexAI/backend/services/chat/package*.json ./
 RUN npm install
-
-COPY ./services/chat/package*.json ./services/chat/
-RUN cd services/chat && npm install
-
-COPY services/chat ./services/chat
-COPY shared ./shared
-
-WORKDIR /app/services/chat
-
+COPY 1.cortexAI/backend/services/chat/ ./
+COPY 1.cortexAI/backend/shared/ /shared/
+RUN rm -rf /shared/node_modules && ln -s /app/node_modules /shared/node_modules
 EXPOSE 8002
-
-CMD [ "npm","start" ]
+CMD ["npm", "start"]
