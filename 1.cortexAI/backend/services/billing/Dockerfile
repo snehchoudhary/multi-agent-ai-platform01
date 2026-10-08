@@ -1,19 +1,9 @@
-FROM node
-
+FROM node:22
 WORKDIR /app
-
-
-COPY package*.json ./
+COPY 1.cortexAI/backend/services/billing/package*.json ./
 RUN npm install
-
-COPY ./services/billing/package*.json ./services/billing/
-RUN cd services/billing && npm install
-
-COPY services/billing ./services/billing
-COPY shared ./shared
-
-WORKDIR /app/services/billing
-
+COPY 1.cortexAI/backend/services/billing/ ./
+COPY 1.cortexAI/backend/shared/ /shared/
+RUN rm -rf /shared/node_modules && ln -s /app/node_modules /shared/node_modules
 EXPOSE 8004
-
-CMD [ "npm","start" ]
+CMD ["npm", "start"]
