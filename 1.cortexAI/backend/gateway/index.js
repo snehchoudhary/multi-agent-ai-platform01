@@ -16,6 +16,7 @@ app.use(cors({
     credentials:true
 }))
 app.use(morgan("dev"))
+app.use(express.json())
 app.use(cookieParser())
 app.use("/api/auth",proxy(process.env.AUTH_SERVICE))
 app.use("/api/chat",protect,proxyWithHeader(process.env.CHAT_SERVICE))
@@ -29,3 +30,4 @@ app.get("/",(req,res)=>{
 app.listen(port,()=>{
     console.log(`gateway started at ${port}`)
 })
+
