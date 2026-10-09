@@ -1,3 +1,4 @@
+﻿import { randomUUID } from 'node:crypto'
 import { getAuth } from "firebase-admin/auth"
 import { app } from "../config/firebase.js"
 import User from "../models/user.model.js"
@@ -21,7 +22,7 @@ export const login = async (req, res) => {
             })
         }
 
-        const sessionId = crypto.randomUUID()
+        const sessionId = randomUUID()
         await redis.set(`user-session-${user?._id}`,
             sessionId
             , "EX", 7 * 24 * 60 * 60)
@@ -152,3 +153,6 @@ export const deductCredits = async (req, res) => {
  return res.status(500).json({ message: `deduct credits error ${error}` })
     }
 }
+
+
+
