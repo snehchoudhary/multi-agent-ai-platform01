@@ -145,12 +145,18 @@ ${state.prompt}
     artifacts:[]
    }  
 } catch (error) {
-   console.log(error)
-         return {
-            ...state,
-            aiResponse:error?.data?.message || "failed to generate code",
-            artifacts:[]
-        }
+    console.error("[CODING AGENT ERROR]", {
+        message: error?.message,
+        status: error?.status,
+        code: error?.code,
+        response: error?.response?.data,
+        stack: error?.stack
+    });
+    return {
+        ...state,
+        aiResponse: error?.message || "failed to generate code",
+        artifacts: []
+    };
 }
   
 }
