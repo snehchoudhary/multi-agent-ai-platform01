@@ -7,9 +7,17 @@ const groq=new ChatGroq({
     model:"openai/gpt-oss-120b"
 })
 
-const gemini=new ChatGoogleGenerativeAI({
-    model:"gemini-2.5-flash"
-})
+// const gemini=new ChatGoogleGenerativeAI({
+//     model:"gemini-3.8-flash"
+// })
+
+
+
+const gemini = new ChatGoogleGenerativeAI({
+    model: "gemini-3.5-flash-lite",
+    temperature: 0,
+    maxOutputTokens: 1024
+});
 
 const openrouter=new ChatOpenRouter({
     model:"deepseek/deepseek-chat",
@@ -18,19 +26,24 @@ const openrouter=new ChatOpenRouter({
 })
 
 
-export const getModel=async (agent)=>{
+
+export const getModel = async (agent) => {
     switch (agent) {
+        case "pdf":
+        case "pdf-rag":
+            return gemini;
+
         case "chat":
+        case "search":
             return groq;
-        case "search" :    
-           return groq;
-        case "coding": 
-           return openrouter; 
-        case "imageAnalyzer": 
-           return gemini;   
-    
+
+        case "coding":
+            return openrouter;
+
+        case "imageAnalyzer":
+            return gemini;
+
         default:
             return groq;
     }
-}
-
+};

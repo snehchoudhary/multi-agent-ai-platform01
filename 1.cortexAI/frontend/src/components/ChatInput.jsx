@@ -162,6 +162,7 @@ function ChatInput() {
             const Icon = agent.icon
             return (
               <div
+                key={agent.id}
                 onClick={() => setSelectedAgent(agent.label)}
                 className={`
             flex-shrink-0

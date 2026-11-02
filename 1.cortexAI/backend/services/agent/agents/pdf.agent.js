@@ -1,73 +1,95 @@
-import { getModel } from "../config/llmModels.js"
-import { generatePdf } from "../utils/generatePdf.js"
-import { getFromS3 } from "../utils/getFromS3.js"
-import { uploadToS3 } from "../utils/uploadToS3.js"
-import { deductCredits } from "../utils/deductCredits.js"
-import { checkAgentLimit } from "../config/agentLimit.js"
-export const pdfAgent=async (state) => {
+
+import { getModel } from "../config/llmModels.js";
+import { generatePdf } from "../utils/generatePdf.js";
+import { getFromS3 } from "../utils/getFromS3.js";
+import { uploadToS3 } from "../utils/uploadToS3.js";
+import { deductCredits } from "../utils/deductCredits.js";
+import { checkAgentLimit } from "../config/agentLimit.js";
+
+const pdfSchema = {
+    type: "object",
+    properties: {
+        title: { type: "string" },
+        subtitle: { type: "string" },
+        sections: {
+            type: "array",
+            items: {
+                type: "object",
+                properties: {
+                    heading: { type: "string" },
+                    points: {
+                        type: "array",
+                        items: { type: "string" }
+                    }
+                },
+                required: ["heading", "points"]
+            }
+        }
+    },
+    required: ["title", "subtitle", "sections"]
+};
+
+export const pdfAgent = async (state) => {
     try {
-        const rate=await checkAgentLimit(state.userId,"pdf")
-        
-        
-        const llm=await getModel("pdf")
-        const prompt=`
-        You are an expert document writer.
+        await checkAgentLimit(state.userId, "pdf");
 
-Return ONLY valid JSON.
+        const llm = await getModel("pdf");
+        const structuredLlm = llm.withStructuredOutput(pdfSchema);
 
-Do NOT return markdown.
+        const data = await structuredLlm.invoke(`
+            You are an expert document writer.
 
-Do NOT return explanations.
+            Create a detailed, well-organized document on:
 
-Structure:
+            ${state.prompt}
 
-{
-"title":"",
-"subtitle":"",
-"sections":[
-{
-"heading":"",
-"points":[]
-}
-]
-}
+            Requirements:
+            - Generate 4 to 8 sections.
+            - Each section must have 3 to 6 concise points.
+            - Use informative headings.
+            - Follow the provided output schema.
+        `);
 
-Generate 4-8 sections.
+        if (
+            !data ||
+            !data.title ||
+            !Array.isArray(data.sections) ||
+            data.sections.length === 0
+        ) {
+            throw new Error("Invalid document content returned by AI.");
+        }
 
-Each section should have 3-6 concise bullet points.
+        const pdfBuffer = await generatePdf(data);
 
-Topic:
+        if (!pdfBuffer) {
+            throw new Error("PDF generation returned an empty file.");
+        }
 
-${state.prompt}
-        `
+        const filename = `pdf-${Date.now()}.pdf`;
 
-        const res=await llm.invoke(prompt)
-        const data=JSON.parse(res.content)
-       await deductCredits(state.userId,"pdf")
-        
-        const pdfBuffer=await generatePdf(data)
+        await uploadToS3(filename, pdfBuffer, "application/pdf");
 
-        const filename=`pdf-${Date.now()}.pdf`
-        await uploadToS3(filename,pdfBuffer,"application/pdf")
+        const downloadUrl = await getFromS3(filename, 24 * 60);
 
-        const downloadUrl=await getFromS3(filename,24*60)
+        await deductCredits(state.userId, "pdf");
 
         return {
-          ...state,
-          aiResponse:`# PDF Generated
+            ...state,
+            aiResponse: `# PDF Generated
 
 **${data.title}**
 
 📥 [Download PDF](${downloadUrl})
 
 _Link expires in 10 minutes._`
-        }
+        };
 
     } catch (error) {
-       console.log(error)
-         return {
+        console.error("[PDF AGENT ERROR]", error);
+
+        return {
             ...state,
-            aiResponse:error?.data?.message || "failed to generate pdf"
-        }
+            aiResponse: error?.message || "Failed to generate PDF."
+        };
     }
-}
+};

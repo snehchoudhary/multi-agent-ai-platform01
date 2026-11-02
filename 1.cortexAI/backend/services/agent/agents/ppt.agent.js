@@ -67,14 +67,15 @@ return {
 _Link expires in 10 minutes._`
 }
 
-    } catch (error) {
-        console.log(error)
-         return {
-            ...state,
-            aiResponse:error?.data?.message || "failed to generate ppt"
-        }
-       
+    }  catch (error) {
+    console.error("[PPT ERROR]", error);
+    console.error("[PPT MESSAGE]", error?.message);
+    console.error("[PPT STACK]", error?.stack);
+    console.error("[PPT RESPONSE]", error?.response?.data);
 
-       
-    }
+    return {
+        ...state,
+        aiResponse: error?.data?.message || error?.message || "Failed to generate PPT"
+    };
+}
 }
