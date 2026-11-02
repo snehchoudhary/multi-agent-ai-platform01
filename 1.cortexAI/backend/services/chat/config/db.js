@@ -1,12 +1,13 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
-const connectDb=async ()=>{
+const connectDb = async () => {
     try {
-       await mongoose.connect(process.env.MONGODB_URI) 
-       console.log("db connected")
+        await mongoose.connect(process.env.MONGODB_URI);
+        console.log("Chat DB connected successfully");
     } catch (error) {
-       console.log(`db error ${error}`) 
+        console.error("Chat DB connection failed:", error.message);
+        throw error;
     }
-}
+};
 
-export default connectDb
+export default connectDb;
