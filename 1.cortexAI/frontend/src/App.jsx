@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react'
 import { getRedirectResult } from 'firebase/auth'
 import { auth } from '../utils/firebase'
@@ -14,13 +15,20 @@ function App() {
     useEffect(() => {
         const initializeAuth = async () => {
             try {
+                // First handle Google redirect result
                 const result = await getRedirectResult(auth)
 
                 if (result?.user) {
                     const token = await result.user.getIdToken()
-                    const { data } = await api.post("/api/auth/login", { token })
+
+                    const { data } = await api.post(
+                        "/api/auth/login",
+                        { token }
+                    )
+
                     dispatch(setUserdata(data))
                 } else {
+                    // No redirect result: restore existing session
                     const data = await getCurrentUser()
                     dispatch(setUserdata(data))
                 }
